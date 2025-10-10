@@ -32,7 +32,7 @@ contract MyToken {
         emit Approval(spender, amount);
     }
 
-    function tranferFrom(address from, address to, uint256 amount) external {
+    function transferFrom(address from, address to, uint256 amount) external {
         address spender = msg.sender;
         require(
             allowance[from][msg.sender] >= amount,
