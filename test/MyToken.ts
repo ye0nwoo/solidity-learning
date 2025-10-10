@@ -73,4 +73,70 @@ describe("My Token", () => {
       ).to.be.revertedWith("insufficient balance");
     });
   });
+  describe("TransferFrom", () => {
+    it("shoud emit Approval event", async () => {
+      const signer1 = signers[1];
+      await expect(
+        myTokenC.approve(signer1.address, hre.ethers.parseUnits("10", decimals))
+      )
+        .to.emit(myTokenC, "Approval")
+        .withArgs(signer1.address, hre.ethers.parseUnits("10", decimals));
+    });
+    it("should be reberted with insufficient allowance error", async () => {
+      const signer0 = signers[0];
+      const signer1 = signers[1];
+      await expect(
+        myTokenC
+          .connect(signer1)
+          .transferFrom(
+            signer0.address,
+            signer1.address,
+            hre.ethers.parseUnits("1", decimals)
+          )
+      ).to.be.revertedWith("insufficient allowance");
+    });
+    // 과제
+    describe("assignment", () => {
+      it("signer1 should transfer signer0's tokens after approval", async () => {
+        const signer0 = signers[0];
+        const signer1 = signers[1];
+
+        // 1. approve
+        await expect(
+          myTokenC.approve(
+            signer1.address,
+            hre.ethers.parseUnits("1", decimals)
+          )
+        )
+          .to.emit(myTokenC, "Approval")
+          .withArgs(signer1.address, hre.ethers.parseUnits("1", decimals));
+
+        // 2. transferFrom
+        await expect(
+          myTokenC
+            .connect(signer1)
+            .transferFrom(
+              signer0.address,
+              signer1.address,
+              hre.ethers.parseUnits("1", decimals)
+            )
+        )
+          .to.emit(myTokenC, "Transfer")
+          .withArgs(
+            signer0.address,
+            signer1.address,
+            hre.ethers.parseUnits("1", decimals)
+          );
+
+        // 3. Balance 확인
+        const balanceSigner0 = await myTokenC.balanceOf(signer0.address);
+        const balanceSigner1 = await myTokenC.balanceOf(signer1.address);
+
+        expect(balanceSigner0).to.equal(
+          hre.ethers.parseUnits((mintingAmount - 1n).toString(), decimals)
+        );
+        expect(balanceSigner1).to.equal(hre.ethers.parseUnits("1", decimals));
+      });
+    });
+  });
 });
