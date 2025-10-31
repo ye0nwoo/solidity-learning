@@ -19,6 +19,7 @@ describe("TinyBank", () => {
     tinyBankC = await hre.ethers.deployContract("TinyBank", [
       await myTokenC.getAddress(),
     ]);
+    await myTokenC.setManager(tinyBankC.getAddress());
   });
   describe("Initialized state check", () => {
     it("should return totalStaked 0", async () => {
@@ -67,7 +68,6 @@ describe("TinyBank", () => {
       for (var i = 0; i < BLOCKS; i++) {
         await myTokenC.transfer(transferAmount, signer0.address);
       }
-      await myTokenC.transfer(transferAmount, signer0.address);
 
       await tinyBankC.withdraw(stakingAmount);
       expect(await myTokenC.balanceOf(signer0.address)).equal(
