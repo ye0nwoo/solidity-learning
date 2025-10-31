@@ -33,13 +33,45 @@ describe("TinyBank", () => {
   describe("Staking", async () => {
     it("should return staked amount", async () => {
       const signer0 = signers[0];
-      const stakingamount = hre.ethers.parseUnits("50", DECIMALS);
-      await myTokenC.approve(await tinyBankC.getAddress(), stakingamount);
-      await tinyBankC.stake(stakingamount);
-      expect(await tinyBankC.staked(signer0.address)).equal(stakingamount);
-      expect(await tinyBankC.totalStaked()).equal(stakingamount);
+      const stakingAmount = hre.ethers.parseUnits("50", DECIMALS);
+      await myTokenC.approve(await tinyBankC.getAddress(), stakingAmount);
+      await tinyBankC.stake(stakingAmount);
+      expect(await tinyBankC.staked(signer0.address)).equal(stakingAmount);
+      expect(await tinyBankC.totalStaked()).equal(stakingAmount);
       expect(await myTokenC.balanceOf(tinyBankC)).equal(
         await tinyBankC.totalStaked()
+      );
+    });
+  });
+
+  describe("Withdraw", () => {
+    it("should return 0 staked after withdrawing total token", async () => {
+      const signer0 = signers[0];
+      const stakingAmount = hre.ethers.parseUnits("50", DECIMALS);
+      await myTokenC.approve(await tinyBankC.getAddress(), stakingAmount);
+      await tinyBankC.stake(stakingAmount);
+      await tinyBankC.withdraw(stakingAmount);
+      expect(await tinyBankC.staked(signer0.address)).equal(0);
+    });
+  });
+
+  describe("reward", () => {
+    it("should reward 1MT every blocks", async () => {
+      const signer0 = signers[0];
+      const stakingAmount = hre.ethers.parseUnits("50", DECIMALS);
+      await myTokenC.approve(await tinyBankC.getAddress(), stakingAmount);
+      await tinyBankC.stake(stakingAmount);
+
+      const BLOCKS = 5n;
+      const transferAmount = hre.ethers.parseUnits("1", DECIMALS);
+      for (var i = 0; i < BLOCKS; i++) {
+        await myTokenC.transfer(transferAmount, signer0.address);
+      }
+      await myTokenC.transfer(transferAmount, signer0.address);
+
+      await tinyBankC.withdraw(stakingAmount);
+      expect(await myTokenC.balanceOf(signer0.address)).equal(
+        hre.ethers.parseUnits((BLOCKS + MINTING_AMOUNT + 1n).toString())
       );
     });
   });
