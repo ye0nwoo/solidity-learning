@@ -54,8 +54,6 @@ contract TinyBank is MultiManagedAccess {
     mapping(address => uint256) public staked;
     uint256 public totalStaked;
 
-    // ManagedAccess를 onlyAllconfirmed
-
     constructor(
         IMyToken _stakingToken,
         address _owner,
@@ -78,10 +76,6 @@ contract TinyBank is MultiManagedAccess {
         lastClaimedBlock[to] = block.number;
         _; // caller's code
     }
-
-    //여기도 onlyManager - > onlyallconfirmed 이런식으로 바꿔서 signers0 ~ signers5 까지 테스트 코드를 만들어서 권한을 분산시키고 reset리워드 퍼블럭을 변경헤보는 과제
-
-    //테스트 제출할때 console.load쓰면 안되고 expect로 테스트 마무리까지 해야함
 
     function setRewardPerBlock(uint256 _amount) external onlyAllConfirmed {
         rewardPerBlock = _amount;
