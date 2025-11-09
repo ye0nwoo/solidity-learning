@@ -85,5 +85,3 @@ abstract contract MultiManagedAccess {
         require(found, "You are not a manager");
     }
 }
-
-//접근제어를 테스트하는거 과제 테스트코드 만드는거 function allConfirmed() internal view 부분
