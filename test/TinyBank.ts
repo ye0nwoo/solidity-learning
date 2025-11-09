@@ -16,9 +16,22 @@ describe("TinyBank", () => {
       DECIMALS,
       MINTING_AMOUNT,
     ]);
+
+    const owner = signers[0].address;
+    const managers = [
+      signers[0].address,
+      signers[1].address,
+      signers[2].address,
+    ]; // 최소 3명
+    const managerNumbers = managers.length;
+
     tinyBankC = await hre.ethers.deployContract("TinyBank", [
       await myTokenC.getAddress(),
+      owner,
+      managers,
+      managerNumbers,
     ]);
+
     await myTokenC.setManager(tinyBankC.getAddress());
   });
   describe("Initialized state check", () => {
@@ -74,12 +87,34 @@ describe("TinyBank", () => {
         hre.ethers.parseUnits((BLOCKS + MINTING_AMOUNT + 1n).toString())
       );
     });
-    it("Should revert when changing rewardPerBlock by hacker", async () => {
-      const hacker = signers[3];
+    it("Should revert if not all managers confirmed", async () => {
+      const manager0 = signers[0];
+      const manager1 = signers[1];
       const rewardToChange = hre.ethers.parseUnits("10000", DECIMALS);
+
+      await tinyBankC.connect(manager0).confirm();
+
       await expect(
-        tinyBankC.connect(hacker).setRewardPerBlock(rewardToChange)
-      ).to.be.revertedWith("You are not authorized to manage this contract");
+        tinyBankC.connect(manager0).setRewardPerBlock(rewardToChange)
+      ).to.be.revertedWith("Not all confirmed yet");
+
+      await tinyBankC.connect(manager1).confirm();
+      await expect(
+        tinyBankC.connect(manager0).setRewardPerBlock(rewardToChange)
+      ).to.be.revertedWith("Not all confirmed yet");
+
+      const manager2 = signers[2];
+      await tinyBankC.connect(manager2).confirm();
+      await expect(
+        tinyBankC.connect(manager0).setRewardPerBlock(rewardToChange)
+      ).not.to.be.reverted;
     });
+  });
+  it("Should revert when changing rewardPerBlock by hacker", async () => {
+    const hacker = signers[3];
+    const rewardToChange = hre.ethers.parseUnits("10000", DECIMALS);
+    await expect(
+      tinyBankC.connect(hacker).setRewardPerBlock(rewardToChange)
+    ).to.be.revertedWith("You are not a manager");
   });
 });
